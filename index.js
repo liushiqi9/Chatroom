@@ -5,66 +5,109 @@ var mongodb = require('mongodb');
 var mongodbServer = new mongodb.Server('localhost', 27017, { auto_reconnect: true});
 var db = new mongodb.Db('mydb', mongodbServer);
 
+var storeMessage = function(name,data){
+	console.log('message stored');
+	db.open(function() {
+	db.collection('cappedMessageCollection', function(err, collection) {
+        /* Insert a data */
+        collection.insert({
+        	"name":name, 
+        	"data":data,
+        });
+       }); 
+	}); 
+};
 io.on('connection', function(socket){
 	console.log('a user connected');
-	var client_name;
+	var client_name=null;
 	var time_start=Date.parse(new Date());
-	 
-    socket.on('user name', function(user_name){
+	db.open(function() {
+		db.collection('usersCollection', function(err, collection) {
+			collection.find({}).toArray(function(err,users){
+				users.forEach(function(user){
+					socket.emit('user_list',user.name);
+					});
+				});
+			 }); 
+		db.collection('cappedMessageCollection', function(err, collection) {
+			collection.find({}).toArray(function(err,messages){
+				messages.forEach(function(message){
+					if (message.name!=client_name)
+						{
+							socket.emit('chat_message',message.name,message.data);
+						}
+					});
+				});
+			 }); 
+		}); 
+    socket.on('user_name', function(user_name){
   		console.log('name received');
-  		client_name=user_name;
+  		if (client_name!=null)
+  		{
+  			db.collection('usersCollection', function(err, collection) {
+			    /* Delete a data */
+			    collection.remove({
+			        "name":client_name,
+			    });
+			    }); 
+  		}
+  		db.open(function() {
+  		
+		db.collection('usersCollection', function(err, collection) {
+	        /* Insert a data */
+	        collection.insert({
+	            "name":user_name
+	        }, function(err, data) {
+	            if (data) {
+	                client_name=user_name;
+	                io.emit('user_list',user_name);
+					console.log('CN received');
 
-    });
-   //   socket.on('history', function(){
-  	// 	db.open(function() {
-		 //     db.collection('mycoll', function(err, collection) {
-		 //        /* Insert a data */
-		 //        console.log('at least database');
-		 //         collection.find({ username: client_name,timestart:{"$gt":1}}, function(err, data) {
-			//             /* Found this People */
-			//             if (data) {
-			//             	console.log('at least data');
-			//                 collection.find({time: {"$gte":data.timestart,"$lte":data.timeend}},{username:1,message:1},function(err,msg){
-			//                 io.emit('chat message',msg.username,msg.message);
-			//                 console.log('got something');
-			//                 console.log(msg.message);
-			//                 });
-			//             } else {
-			//                 console.log('Cannot found');
-			//             }
-			//         });
-		 //       }); 
-		 //    });
-	 	// }); 
+					
+	            } else {
+	                socket.emit('chat_message',"System:","the name has been taken");
+	            }
+	        	});
+	       }); 
+		});
+    }); 
 
 
-    socket.on('chat message', function(msg){
-	 			io.emit('chat message',client_name,msg);
-	 		 db.open(function() {
-		     db.collection('mycoll', function(err, collection) {
-		        /* Insert a data */
-		        collection.insert({
-		            message: msg,
-		            username: client_name,
-		            time: Date.parse(new Date()),
-		        }, function(err, data) {
-		            if (data) {
-		                console.log('Successfully Insert');
-		            } else {
-		                console.log('Failed to Insert');
-		            }
-		        });
-		       }); 
-		    });
-	 	}); 
+    socket.on('chat_message', function(msg){
+ 		io.emit('chat_message',client_name,msg);
+ 		storeMessage(client_name,msg);
+ 		db.open(function() {
+	    db.collection('mycoll', function(err, collection) {
+	        /* Insert a data */
+	        collection.insert({
+	            "message": msg,
+	            "username": client_name,
+	            "time": Date.parse(new Date()),
+	        }, function(err, data) {
+	            if (data) {
+	                console.log('Successfully Insert');
+	            } else {
+	                console.log('Failed to Insert');
+	            }
+	        });
+	       }); 
+	    });
+ 	}); 
 
   socket.on('disconnect',function(){
   	console.log('user disconnect');
-  	 db.collection('mycoll', function(err, collection) {
-  	collection.insert({
-            username: client_name,
-            timestart: time_start,
-            timeend: Date.parse(new Date()),
+  	io.emit("remove_user",client_name);
+  	db.collection('usersCollection', function(err, collection) {
+        /* Delete a data */
+        collection.remove({
+            "name":client_name,
+        });
+       }); 
+  	db.collection('mycoll', function(err, collection) {
+  		collection.insert({
+            "username": client_name,
+            "timestart": time_start,
+            "timeend": Date.parse(new Date()),
         }, function(err, data) {
             if (data) {
                 console.log('Successfully Insert');
@@ -73,6 +116,16 @@ io.on('connection', function(socket){
             }
         });
   	 });
+
+  });
+  socket.on('get_user',function(){
+  	db.collection('usersCollection', function(err, collection) {
+			collection.find({}).toArray(function(err,users){
+				users.forEach(function(user){
+					socket.emit('user_list',user.name);
+					});
+				});
+			 }); 
   });
 
 });

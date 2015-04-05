@@ -2,55 +2,20 @@
 <html>
   <head>
     <title>Socket.IO chat</title>
-    <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { font: 13px Helvetica, Arial; }
-      form  { background: #FFF;  position: fixed; bottom: 0; width: 100%; height: 6% }
-      form input#m { padding-top:2px;border: 0;  width: 60%; height: 100% }
-      form input#n {padding-top:2px; border: 0;  width: 10%;   height: 100% }
-      form button { padding-top:2px;height: 100% ; width: 9.5%; background: rgb(130, 224, 255); border: none;  }
-      #messages { list-style-type: none; margin: 0; padding: 0; }
-      #messages li { padding: 5px 10px; }
-      #messages li:nth-child(odd) { background: #eee; }
-    </style>
-    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
-	<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
-
+    <link rel="stylesheet" href="index.css">
   </head>
   <body>
+    <ul id="users">
+      <li>Users:</li>
+    </ul>
     <ul id="messages"></ul>
-      
     <form>
-      <input id="m" autocomplete="off" /><button id="send">Send</button>
-      <input id="n" autocomplete="off" /><button id="sign">Sign</button>
+      <input id="message" autocomplete="off" /><button id="send">Send</button>
+      <input id="name" autocomplete="off" /><button id="sign">Sign</button>
       <button id="clear">  Clear  </button>
     </form>
-    	<script>
-    	  var username = null;
-        var socket = io();
-
-	 	   $('#sign').click(function(e){
-	 	  	e.preventDefault();
-	 	  	username = $("#n").val();
-		    socket.emit('user name', $('#n').val());
-	  	    $('#n').val('');
-	  	  });
-      /* $('#history').click(function(e){
-        e.preventDefault();
-        socket.emit('history');
-        });*/
-	 	   $('#send').click(function(e){
-	 	  	e.preventDefault();
-		    socket.emit('chat message', $('#m').val());
-	  	    $('#m').val('');
-	  	  });
-       $('#clear').click(function(e){
-        e.preventDefault();
-        $('#messages').empty();
-       });
-	 	    socket.on('chat message',function(msg_name,msg){
-	  	  	$('#messages').append($('<li>').text(msg_name+':'+msg));
-	  	  });
-	   </script>
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script  src="index.js"></script>
   </body>
 </html>
