@@ -1,6 +1,6 @@
-# Chatroom
-Chatroom Using nodejs/express/mongodb/socket.io
-Datas are saved in mongodb.
-Since users have no passward, it make no sence to check some certain nickname's history record. So whenever people open the page, it will print out the lastest 10 messages.
-Forbiden to use same nickname.
-Have a real time user list showed on the right side of the page.
+## Chatroom
+Chatroom Using ```nodejs/express/mongodb/socket.io```
+MongoDB helps it to preserve the data.
+Since users have no passwords, it makes no sense to check some certain nickname's history record. So whenever people open the page, it will print out the latest ten messages.
+Using the same nickname is forbidden.
+It also has a real-time user list showed on the right side of the page.
